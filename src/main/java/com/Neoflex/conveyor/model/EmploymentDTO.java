@@ -11,10 +11,10 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class EmploymentDTO {
 
-    private Enum employmentStatus;
+    private EmploymentStatus employmentStatus;
     private String employerINN;
     private BigDecimal salary;
-    private Enum position;
+    private Position position;
     private Integer workExperienceTotal;
     private Integer workExperienceCurrent;
 
