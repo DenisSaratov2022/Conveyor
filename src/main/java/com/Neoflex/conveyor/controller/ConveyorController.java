@@ -33,5 +33,4 @@ public class ConveyorController {
         log.info("conveyorCalculation method started with params: " + scoringDataDTO.toString());
         return conveyorService.getCredit(scoringDataDTO);
     }
-    //
 }

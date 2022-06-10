@@ -178,7 +178,7 @@ public class ConveyorService {
                 } else {
                     finalRate -= 1.5;
                 }
-//
+
                 BigDecimal total = scoringDataDTO.getAmount().add(insuranceСost);
                 debtPayment = total.divide(BigDecimal.valueOf(scoringDataDTO.getTerm()));
                 paymentOfInterest = total.divide(BigDecimal.valueOf(100)).multiply(BigDecimal.valueOf(finalRate));

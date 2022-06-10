@@ -36,5 +36,4 @@ public class LoanApplicationRequestDTO {
     @NotBlank
     @Size(min = 6, max = 6)
     private String passportNumber;
-//
 }
