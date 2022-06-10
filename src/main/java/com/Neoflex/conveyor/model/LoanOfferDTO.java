@@ -32,5 +32,5 @@ public class LoanOfferDTO {
     private BigDecimal rate;
     private boolean isInsuranceEnabled;
     private boolean isSalaryClient;
-
+//
 }
