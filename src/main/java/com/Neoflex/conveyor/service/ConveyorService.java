@@ -2,7 +2,7 @@ package com.Neoflex.conveyor.service;
 
 
 import com.Neoflex.conveyor.model.*;
-import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +12,8 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+
+@Slf4j
 @Service
 public class ConveyorService {
 
@@ -23,22 +25,23 @@ public class ConveyorService {
     public List<LoanOfferDTO> getOffers(LoanApplicationRequestDTO loanApplicationRequestDTO) {
         List<LoanOfferDTO> offers = new ArrayList<>();
         applicationId++;
-        GenerateLoanOfferDTO(loanApplicationRequestDTO, offers);
-        GenerateLoanOfferDTO1(loanApplicationRequestDTO, offers);
-        GenerateLoanOfferDTO2(loanApplicationRequestDTO, offers);
-        GenerateLoanOfferDTO3(loanApplicationRequestDTO, offers);
+        generateStandardLoanOfferDTO(loanApplicationRequestDTO, offers);
+        generateLoanOfferDTOWithInsuranceEnabled(loanApplicationRequestDTO, offers);
+        generateLoanOfferDTOForSalaryClient(loanApplicationRequestDTO, offers);
+        generateLoanOfferDTOForSalaryClientWithInsuranceEnabled(loanApplicationRequestDTO, offers);
+        log.info("getOffers method return: {}", offers);
         return offers;
     }
 
     private BigDecimal getInsurance(LoanApplicationRequestDTO loanApplicationRequestDTO) {
         return loanApplicationRequestDTO.getAmount()
                 .divide(BigDecimal.valueOf(100), NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP)
-                .multiply(BigDecimal.valueOf(2.5))
+                .multiply(BigDecimal.valueOf(1.5))
                 .multiply(BigDecimal.valueOf(loanApplicationRequestDTO.getTerm()))
                 .divide(BigDecimal.valueOf(12), NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
     }
 
-    private void GenerateLoanOfferDTO(LoanApplicationRequestDTO loanApplicationRequestDTO, List<LoanOfferDTO> offers) {
+    private void generateStandardLoanOfferDTO(LoanApplicationRequestDTO loanApplicationRequestDTO, List<LoanOfferDTO> offers) {
         BigDecimal monthlyInterestRate = BigDecimal.valueOf(rate)
                 .divide(BigDecimal.valueOf(1200), NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
         BigDecimal x = monthlyInterestRate.add(BigDecimal.valueOf(1))
@@ -53,7 +56,7 @@ public class ConveyorService {
         applicationId++;
     }
 
-    private void GenerateLoanOfferDTO1(LoanApplicationRequestDTO loanApplicationRequestDTO, List<LoanOfferDTO> offers) {
+    private void generateLoanOfferDTOWithInsuranceEnabled(LoanApplicationRequestDTO loanApplicationRequestDTO, List<LoanOfferDTO> offers) {
         BigDecimal insurance = getInsurance(loanApplicationRequestDTO);
         BigDecimal finalRate = BigDecimal.valueOf(rate).subtract(BigDecimal.valueOf(1.5));
         BigDecimal totalAmount = loanApplicationRequestDTO.getAmount().add(insurance);
@@ -70,30 +73,32 @@ public class ConveyorService {
         applicationId++;
     }
 
-    private void GenerateLoanOfferDTO2(LoanApplicationRequestDTO loanApplicationRequestDTO, List<LoanOfferDTO> offers) {
+    private void generateLoanOfferDTOForSalaryClient(LoanApplicationRequestDTO loanApplicationRequestDTO, List<LoanOfferDTO> offers) {
         BigDecimal finalRate = BigDecimal.valueOf(rate).subtract(BigDecimal.valueOf(1.5));
         BigDecimal monthlyInterestRate = finalRate.divide(BigDecimal.valueOf(1200),NUMBER_OF_ROUNDED_CHARACTERS,RoundingMode.HALF_UP);
         BigDecimal x = monthlyInterestRate.add(BigDecimal.valueOf(1))
-                .pow(loanApplicationRequestDTO.getTerm()-1);
-        BigDecimal y = monthlyInterestRate.divide(x, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP)
-                .add(monthlyInterestRate);
-        BigDecimal monthlyPayment = loanApplicationRequestDTO.getAmount().multiply(y);
+                .pow(loanApplicationRequestDTO.getTerm());
+        BigDecimal y = BigDecimal.valueOf(1).divide(x, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
+        BigDecimal z = BigDecimal.valueOf(1).subtract(y);
+        BigDecimal monthlyPayment = monthlyInterestRate.divide(z,NUMBER_OF_ROUNDED_CHARACTERS,RoundingMode.HALF_UP)
+                .multiply(loanApplicationRequestDTO.getAmount());
         LoanOfferDTO loanOfferDTO2 = new LoanOfferDTO(applicationId, loanApplicationRequestDTO.getAmount(), loanApplicationRequestDTO.getAmount(),
                 loanApplicationRequestDTO.getTerm(), monthlyPayment, finalRate, false, true );
         offers.add(loanOfferDTO2);
         applicationId++;
     }
 
-    private void GenerateLoanOfferDTO3(LoanApplicationRequestDTO loanApplicationRequestDTO, List<LoanOfferDTO> offers) {
+    private void generateLoanOfferDTOForSalaryClientWithInsuranceEnabled(LoanApplicationRequestDTO loanApplicationRequestDTO, List<LoanOfferDTO> offers) {
         BigDecimal insurance = getInsurance(loanApplicationRequestDTO);
         BigDecimal finalRate = BigDecimal.valueOf(rate).subtract(BigDecimal.valueOf(3));
         BigDecimal totalAmount = loanApplicationRequestDTO.getAmount().add(insurance);
         BigDecimal monthlyInterestRate = finalRate.divide(BigDecimal.valueOf(1200), NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
         BigDecimal x = monthlyInterestRate.add(BigDecimal.valueOf(1))
-                .pow(loanApplicationRequestDTO.getTerm()-1);
-        BigDecimal y = monthlyInterestRate.divide(x, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP)
-                .add(monthlyInterestRate);
-        BigDecimal monthlyPayment =totalAmount.multiply(y);
+                .pow(loanApplicationRequestDTO.getTerm());
+        BigDecimal y = BigDecimal.valueOf(1).divide(x, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
+        BigDecimal z = BigDecimal.valueOf(1).subtract(y);
+        BigDecimal monthlyPayment = monthlyInterestRate.divide(z,NUMBER_OF_ROUNDED_CHARACTERS,RoundingMode.HALF_UP)
+                .multiply(totalAmount);
         LoanOfferDTO loanOfferDTO3 = new LoanOfferDTO(applicationId, loanApplicationRequestDTO.getAmount(), totalAmount,
                 loanApplicationRequestDTO.getTerm(), monthlyPayment, finalRate, true, true );
         offers.add(loanOfferDTO3);

@@ -1,5 +1,6 @@
 package com.Neoflex.conveyor.model;
 
+import com.Neoflex.conveyor.validation.ChekDateOfBirth;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,6 +30,7 @@ public class LoanApplicationRequestDTO {
     private String middleName;
     @Email
     private String email;
+    @ChekDateOfBirth()
     private LocalDate birthdate;
     @NotBlank
     @Size(min = 4, max = 4)
