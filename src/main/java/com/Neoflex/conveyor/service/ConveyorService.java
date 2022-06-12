@@ -42,10 +42,11 @@ public class ConveyorService {
         BigDecimal monthlyInterestRate = BigDecimal.valueOf(rate)
                 .divide(BigDecimal.valueOf(1200), NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
         BigDecimal x = monthlyInterestRate.add(BigDecimal.valueOf(1))
-                .pow(loanApplicationRequestDTO.getTerm()-1);
-        BigDecimal y = monthlyInterestRate.divide(x,NUMBER_OF_ROUNDED_CHARACTERS,RoundingMode.HALF_UP)
-                .add(monthlyInterestRate);
-        BigDecimal monthlyPayment = loanApplicationRequestDTO.getAmount().multiply(y);
+                .pow(loanApplicationRequestDTO.getTerm());
+        BigDecimal y = BigDecimal.valueOf(1).divide(x, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
+        BigDecimal z = BigDecimal.valueOf(1).subtract(y);
+        BigDecimal monthlyPayment = monthlyInterestRate.divide(z,NUMBER_OF_ROUNDED_CHARACTERS,RoundingMode.HALF_UP)
+                .multiply(loanApplicationRequestDTO.getAmount());
         LoanOfferDTO loanOfferDTO = new LoanOfferDTO(applicationId, loanApplicationRequestDTO.getAmount(), loanApplicationRequestDTO.getAmount(),
                 loanApplicationRequestDTO.getTerm(), monthlyPayment, BigDecimal.valueOf(rate), false, false );
         offers.add(loanOfferDTO);
@@ -58,10 +59,11 @@ public class ConveyorService {
         BigDecimal totalAmount = loanApplicationRequestDTO.getAmount().add(insurance);
         BigDecimal monthlyInterestRate = finalRate.divide(BigDecimal.valueOf(1200), NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
         BigDecimal x = monthlyInterestRate.add(BigDecimal.valueOf(1))
-                .pow(loanApplicationRequestDTO.getTerm()-1);
-        BigDecimal y = monthlyInterestRate.divide(x,NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP)
-                .add(monthlyInterestRate);
-        BigDecimal monthlyPayment =totalAmount.multiply(y);
+                .pow(loanApplicationRequestDTO.getTerm());
+        BigDecimal y = BigDecimal.valueOf(1).divide(x, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
+        BigDecimal z = BigDecimal.valueOf(1).subtract(y);
+        BigDecimal monthlyPayment = monthlyInterestRate.divide(z,NUMBER_OF_ROUNDED_CHARACTERS,RoundingMode.HALF_UP)
+                .multiply(totalAmount);
         LoanOfferDTO loanOfferDTO1 = new LoanOfferDTO(applicationId, loanApplicationRequestDTO.getAmount(), totalAmount,
                 loanApplicationRequestDTO.getTerm(), monthlyPayment, finalRate, true, false );
         offers.add(loanOfferDTO1);
