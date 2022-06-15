@@ -25,10 +25,10 @@ public class ConveyorService {
     public List<LoanOfferDTO> getOffers(LoanApplicationRequestDTO loanApplicationRequestDTO) {
         List<LoanOfferDTO> offers = new ArrayList<>();
         applicationId++;
-        generateLoanOfferDTOWithInsuranceEnabled(loanApplicationRequestDTO, offers);
-        generateLoanOfferDTOForSalaryClientWithInsuranceEnabled(loanApplicationRequestDTO, offers);
         generateStandardLoanOfferDTO(loanApplicationRequestDTO, offers);
+        generateLoanOfferDTOWithInsuranceEnabled(loanApplicationRequestDTO, offers);
         generateLoanOfferDTOForSalaryClient(loanApplicationRequestDTO, offers);
+        generateLoanOfferDTOForSalaryClientWithInsuranceEnabled(loanApplicationRequestDTO, offers);
         log.info("getOffers method return: {}", offers);
         return offers;
     }

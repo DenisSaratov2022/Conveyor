@@ -15,7 +15,7 @@ import java.time.LocalDate;
 public class LoanApplicationRequestDTO {
 
     @Min(10000)
-    @Max(100000000)
+    @Max(10000000)
     private BigDecimal amount;
     @Min(6)
     @Max(60)

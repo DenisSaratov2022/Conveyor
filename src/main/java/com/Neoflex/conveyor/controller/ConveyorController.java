@@ -23,13 +23,13 @@ public class ConveyorController {
     private final ConveyorService conveyorService;
 
     @PostMapping("/conveyor/offers")
-    public List<LoanOfferDTO> conveyorOffers (@RequestBody @Valid LoanApplicationRequestDTO loanApplicationRequestDTO){
-        log.info("conveyorOffers method started with params: "+loanApplicationRequestDTO.toString());
-    return conveyorService.getOffers(loanApplicationRequestDTO);
+    public List<LoanOfferDTO> conveyorOffers(@RequestBody @Valid LoanApplicationRequestDTO loanApplicationRequestDTO) {
+        log.info("conveyorOffers method started with params: " + loanApplicationRequestDTO.toString());
+        return conveyorService.getOffers(loanApplicationRequestDTO);
     }
 
     @PostMapping("/conveyor/calculation")
-    public CreditDTO conveyorCalculation (@RequestBody ScoringDataDTO scoringDataDTO) {
+    public CreditDTO conveyorCalculation(@RequestBody ScoringDataDTO scoringDataDTO) {
         log.info("conveyorCalculation method started with params: " + scoringDataDTO.toString());
         return conveyorService.getCredit(scoringDataDTO);
     }
