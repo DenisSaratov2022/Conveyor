@@ -207,11 +207,10 @@ public class ConveyorService {
                 remainingDebt = scoringDataDTO.getAmount();
             }
 
-            LocalDate transactionDate = LocalDate.now();
             List<PaymentScheduleElement> paymentSchedule = new ArrayList<>();
             for (int i = 0; i < scoringDataDTO.getTerm(); i++) {
                 remainingDebt = remainingDebt.subtract(monthlyPayment);
-                PaymentScheduleElement paymentScheduleElement = new PaymentScheduleElement(i + 1, transactionDate.plusMonths(i + 1), monthlyPayment,
+                PaymentScheduleElement paymentScheduleElement = new PaymentScheduleElement(i + 1, LocalDate.now().plusMonths(i + 1), monthlyPayment,
                         paymentOfInterest, debtPayment, remainingDebt);
                 paymentSchedule.add(paymentScheduleElement);
             }
