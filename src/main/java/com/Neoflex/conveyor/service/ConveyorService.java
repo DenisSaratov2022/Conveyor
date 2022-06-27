@@ -19,7 +19,8 @@ public class ConveyorService {
 
     @Value("${standard.rate}")
     private double rate;
-    private static final Integer NUMBER_OF_ROUNDED_CHARACTERS = 5;
+    private static final Integer NUMBER_OF_ROUNDED_CHARACTERS = 8;
+    private static final Integer NUMBER_OF_ROUNDED_CHARACTERS_FINAL = 2;
     private long applicationId = 0;
 
     public List<LoanOfferDTO> getOffers(LoanApplicationRequestDTO loanApplicationRequestDTO) {
@@ -106,34 +107,39 @@ public class ConveyorService {
     }
 
     public CreditDTO getCredit(ScoringDataDTO scoringDataDTO) {
-        BigDecimal insuranceСost = scoringDataDTO.getAmount().divide(BigDecimal.valueOf(100)).multiply(BigDecimal.valueOf(2.5))
-                .multiply(BigDecimal.valueOf(scoringDataDTO.getTerm())).divide(BigDecimal.valueOf(12));
-        Period period = Period.between(LocalDate.now(), scoringDataDTO.getBirthdate());
-        int ageClient = Math.abs(period.getYears());
 
-        if (scoringDataDTO.getEmployment().getEmploymentStatus().toString().equals("UNEMPLOYED") ||
-                scoringDataDTO.getAmount().compareTo(scoringDataDTO.getEmployment().getSalary().multiply(BigDecimal.valueOf(20))) < 0 ||
-                ageClient < 20 || ageClient > 60 || scoringDataDTO.getEmployment().getWorkExperienceTotal() < 12 ||
+        Period period = Period.between(LocalDate.now(), scoringDataDTO.getBirthdate());
+        int ageClient = period.getYears();
+
+        if (scoringDataDTO.getEmployment().getEmploymentStatus().equals(EmploymentStatus.UNEMPLOYED) ||
+                scoringDataDTO.getAmount().compareTo(scoringDataDTO.getEmployment().getSalary().multiply(BigDecimal.valueOf(20))) > 0 ||
+                ageClient > -20 || ageClient < -60 || scoringDataDTO.getEmployment().getWorkExperienceTotal() < 12 ||
                 scoringDataDTO.getEmployment().getWorkExperienceCurrent() < 3) {
             return null;
 
         } else {
+            float t = (float) scoringDataDTO.getTerm() / 12;
+            double termInYears = Math.ceil(t);
+
+            BigDecimal insurance = scoringDataDTO.getAmount().divide(BigDecimal.valueOf(100), NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.CEILING)
+                    .multiply(BigDecimal.valueOf(2.5))
+                    .multiply(BigDecimal.valueOf(termInYears)).divide(BigDecimal.ONE, NUMBER_OF_ROUNDED_CHARACTERS_FINAL, RoundingMode.HALF_UP);
+
             double finalRate = rate;
 
-            switch (scoringDataDTO.getEmployment().getEmploymentStatus().toString()) {
-                case ("SELF_EMPLOYED"):
+            switch (scoringDataDTO.getEmployment().getEmploymentStatus()) {
+                case SELF_EMPLOYED:
                     finalRate++;
                     break;
-                case ("BUSINESS_OWNER"):
+                case BUSINESS_OWNER:
                     finalRate += 3;
                     break;
-                case ("EMPLOYED"):
-                    switch (scoringDataDTO.getEmployment().getPosition().toString()) {
-
-                        case ("MID_MANAGER"):
+                case EMPLOYED:
+                    switch (scoringDataDTO.getEmployment().getPosition()) {
+                        case MID_MANAGER:
                             finalRate -= 2;
                             break;
-                        case ("TOP_MANAGER"):
+                        case TOP_MANAGER:
                             finalRate -= 4;
                             break;
                         default:
@@ -141,12 +147,11 @@ public class ConveyorService {
                     }
             }
 
-            switch (scoringDataDTO.getMaritalStatus().toString()) {
-
-                case ("MARRIED"):
+            switch (scoringDataDTO.getMaritalStatus()) {
+                case MARRIED:
                     finalRate -= 3;
                     break;
-                case ("DIVORCED"):
+                case DIVORCED:
                     finalRate += 1;
                     break;
                 default:
@@ -157,27 +162,31 @@ public class ConveyorService {
                 finalRate++;
             }
 
-            switch (scoringDataDTO.getGender().toString()) {
-                case ("MALE"):
-                    if (ageClient < 55 && ageClient > 30) {
+            switch (scoringDataDTO.getGender()) {
+                case MALE:
+                    if (ageClient > -55 && ageClient < -30) {
                         finalRate -= 3;
                     }
                     break;
-                case ("FEMALE"):
-                    if (ageClient < 60 && ageClient > 35) {
+                case FEMALE:
+                    if (ageClient > -60 && ageClient < -35) {
                         finalRate -= 3;
                     }
                     break;
-                case ("NON_BINARY"): {
+                case NON_BINARY: {
                     finalRate += 3;
                 }
             }
 
             BigDecimal psk;
             BigDecimal monthlyPayment;
-            BigDecimal debtPayment;
-            BigDecimal paymentOfInterest;
+            BigDecimal monthlyInterestRate;
+            BigDecimal x;
+            BigDecimal y;
+            BigDecimal z;
             BigDecimal remainingDebt;
+            BigDecimal total;
+            BigDecimal interests;
 
             if (scoringDataDTO.getIsInsuranceEnabled()) {
                 if (scoringDataDTO.getIsSalaryClient()) {
@@ -186,38 +195,64 @@ public class ConveyorService {
                     finalRate -= 1.5;
                 }
 
-                BigDecimal total = scoringDataDTO.getAmount().add(insuranceСost);
-                debtPayment = total.divide(BigDecimal.valueOf(scoringDataDTO.getTerm()));
-                paymentOfInterest = total.divide(BigDecimal.valueOf(100)).multiply(BigDecimal.valueOf(finalRate));
-                monthlyPayment = debtPayment.add(paymentOfInterest);
-                psk = monthlyPayment.multiply(BigDecimal.valueOf(scoringDataDTO.getTerm()))
-                        .divide(total).subtract(BigDecimal.valueOf(1))
-                        .divide(BigDecimal.valueOf(scoringDataDTO.getTerm()))
-                        .divide(BigDecimal.valueOf(12)).multiply(BigDecimal.valueOf(100));
-                remainingDebt = total;
+                total = scoringDataDTO.getAmount().add(insurance);
+
             } else {
                 if (scoringDataDTO.getIsSalaryClient()) {
                     finalRate -= 1.5;
                 }
-                debtPayment = scoringDataDTO.getAmount().divide(BigDecimal.valueOf(scoringDataDTO.getTerm()));
-                paymentOfInterest = scoringDataDTO.getAmount().divide(BigDecimal.valueOf(100)).multiply(BigDecimal.valueOf(finalRate));
-                monthlyPayment = debtPayment.add(paymentOfInterest);
-                psk = monthlyPayment.multiply(BigDecimal.valueOf(scoringDataDTO.getTerm())).divide(scoringDataDTO.getAmount()).subtract(BigDecimal.valueOf(1))
-                        .divide(BigDecimal.valueOf(scoringDataDTO.getTerm())).divide(BigDecimal.valueOf(12)).multiply(BigDecimal.valueOf(100));
-                remainingDebt = scoringDataDTO.getAmount();
+                total = scoringDataDTO.getAmount();
             }
-
+            interests = total.multiply(BigDecimal.valueOf(finalRate))
+                    .divide(BigDecimal.valueOf(100), NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.CEILING)
+                    .multiply(BigDecimal.valueOf(termInYears));
+            total = total.add(interests)
+                    .divide(BigDecimal.ONE, NUMBER_OF_ROUNDED_CHARACTERS_FINAL, RoundingMode.HALF_UP);
+            monthlyInterestRate = BigDecimal.valueOf(finalRate)
+                    .divide(BigDecimal.valueOf(1200), NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.CEILING);
+            x = monthlyInterestRate.add(BigDecimal.valueOf(1))
+                    .pow(scoringDataDTO.getTerm());
+            y = BigDecimal.valueOf(1).divide(x, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.CEILING);
+            z = BigDecimal.valueOf(1).subtract(y);
+            monthlyPayment = monthlyInterestRate.divide(z, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.CEILING)
+                    .multiply(total).divide(BigDecimal.ONE, NUMBER_OF_ROUNDED_CHARACTERS_FINAL, RoundingMode.HALF_UP);
+            psk = total;
+            remainingDebt = total;
+            BigDecimal interestPayment;
+            BigDecimal debtPayment;
+            BigDecimal sumAllPaymentOfInterest = BigDecimal.ZERO;
             List<PaymentScheduleElement> paymentSchedule = new ArrayList<>();
             for (int i = 0; i < scoringDataDTO.getTerm(); i++) {
-                remainingDebt = remainingDebt.subtract(monthlyPayment);
-                PaymentScheduleElement paymentScheduleElement = new PaymentScheduleElement(i + 1, LocalDate.now().plusMonths(i + 1), monthlyPayment,
-                        paymentOfInterest, debtPayment, remainingDebt);
-                paymentSchedule.add(paymentScheduleElement);
+                interestPayment = remainingDebt.multiply(monthlyInterestRate)
+                        .divide(BigDecimal.ONE, NUMBER_OF_ROUNDED_CHARACTERS_FINAL, RoundingMode.HALF_UP);
+                sumAllPaymentOfInterest = sumAllPaymentOfInterest.add(interestPayment);
+                if (remainingDebt.add(interestPayment).compareTo(monthlyPayment) < 0) {
+                    BigDecimal lastMonthlyPayment = remainingDebt.add(interestPayment);
+                    debtPayment = remainingDebt.divide(BigDecimal.ONE, NUMBER_OF_ROUNDED_CHARACTERS_FINAL, RoundingMode.HALF_UP);
+                    remainingDebt = BigDecimal.ZERO;
+                    PaymentScheduleElement paymentScheduleElement = new PaymentScheduleElement(i + 1, LocalDate.now().plusMonths(i + 1), lastMonthlyPayment,
+                            interestPayment, debtPayment, remainingDebt);
+                    paymentSchedule.add(paymentScheduleElement);
+                    break;
+                } else {
+                    debtPayment = monthlyPayment.subtract(interestPayment)
+                            .divide(BigDecimal.ONE, NUMBER_OF_ROUNDED_CHARACTERS_FINAL, RoundingMode.HALF_UP)
+                    ;
+                    remainingDebt = remainingDebt.subtract(debtPayment)
+                            .divide(BigDecimal.ONE, NUMBER_OF_ROUNDED_CHARACTERS_FINAL, RoundingMode.HALF_UP);
+                    PaymentScheduleElement paymentScheduleElement = new PaymentScheduleElement(i + 1, LocalDate.now().plusMonths(i + 1), monthlyPayment,
+                            interestPayment, debtPayment, remainingDebt);
+                    paymentSchedule.add(paymentScheduleElement);
+                }
             }
+            psk = psk.add(sumAllPaymentOfInterest)
+                    .divide(BigDecimal.ONE, NUMBER_OF_ROUNDED_CHARACTERS_FINAL, RoundingMode.HALF_UP);
 
-            CreditDTO creditDTO = new CreditDTO(scoringDataDTO.getAmount(), scoringDataDTO.getTerm(), monthlyPayment, BigDecimal.valueOf(finalRate), psk,
+            CreditDTO creditDTO = new CreditDTO(total, scoringDataDTO.getTerm(), monthlyPayment, BigDecimal.valueOf(finalRate), psk,
                     scoringDataDTO.getIsInsuranceEnabled(), scoringDataDTO.getIsSalaryClient(), paymentSchedule);
+            log.info("getOCredit method return: {}", creditDTO);
             return creditDTO;
         }
     }
 }
+

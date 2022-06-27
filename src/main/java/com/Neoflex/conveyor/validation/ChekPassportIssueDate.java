@@ -9,14 +9,10 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = ChekDateOfBirthValidator.class )
-public @interface ChekDateOfBirth {
+@Constraint(validatedBy = ChekPassportIssueDateValidator.class )
+public @interface ChekPassportIssueDate {
 
-    public String message() default "birthdate must be at least 18 years old from today";
-
+    public String message () default "Passport issue date must be at least 14 years old from today";
     public Class<?>[] groups () default {};
     public Class <? extends Payload> [] payload () default {};
-
-
-
 }

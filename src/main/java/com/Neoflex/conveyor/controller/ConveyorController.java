@@ -29,7 +29,7 @@ public class ConveyorController {
     }
 
     @PostMapping("/conveyor/calculation")
-    public CreditDTO conveyorCalculation(@RequestBody ScoringDataDTO scoringDataDTO) {
+    public CreditDTO conveyorCalculation(@RequestBody @Valid ScoringDataDTO scoringDataDTO) {
         log.info("conveyorCalculation method started with params: " + scoringDataDTO.toString());
         return conveyorService.getCredit(scoringDataDTO);
     }
