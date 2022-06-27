@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.math.BigDecimal;
 
 @Data
@@ -19,5 +21,4 @@ public class LoanOfferDTO {
     private BigDecimal rate;
     private boolean isInsuranceEnabled;
     private boolean isSalaryClient;
-
 }
