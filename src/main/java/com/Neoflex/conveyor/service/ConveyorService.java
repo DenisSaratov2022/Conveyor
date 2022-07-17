@@ -17,6 +17,12 @@ import java.util.List;
 @Service
 public class ConveyorService {
 
+    private static final int MIN_AGE = 20;
+    private static final int MAX_AGE = 60;
+    public static final int MAX_AGE_FOR_MALE = 55;
+    public static final int MIN_AGE_FOR_MALE = 30;
+    public static final int MAX_AGE_FOR_FEMALE = 60;
+    public static final int MIN_AGE_FOR_FEMALE = 35;
     @Value("${standard.rate}")
     private double rate;
     private static final Integer NUMBER_OF_ROUNDED_CHARACTERS = 8;
@@ -47,12 +53,13 @@ public class ConveyorService {
         BigDecimal finalRate = BigDecimal.valueOf(rate).subtract(BigDecimal.valueOf(1.5));
         BigDecimal totalAmount = loanApplicationRequestDTO.getAmount().add(insurance);
         BigDecimal monthlyInterestRate = finalRate.divide(BigDecimal.valueOf(1200), NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
-        BigDecimal x = monthlyInterestRate.add(BigDecimal.valueOf(1))
+        BigDecimal exponentiation = monthlyInterestRate.add(BigDecimal.valueOf(1))
                 .pow(loanApplicationRequestDTO.getTerm());
-        BigDecimal y = BigDecimal.valueOf(1).divide(x, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
-        BigDecimal z = BigDecimal.valueOf(1).subtract(y);
-        BigDecimal monthlyPayment = monthlyInterestRate.divide(z, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP)
-                .multiply(totalAmount);
+        BigDecimal transformationInNegativeDegree = BigDecimal.valueOf(1).divide(exponentiation, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
+        BigDecimal denominatorCalculation = BigDecimal.valueOf(1).subtract(transformationInNegativeDegree);
+        BigDecimal monthlyPayment = monthlyInterestRate.divide(denominatorCalculation, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP)
+                .multiply(totalAmount)
+                .divide(BigDecimal.ONE, NUMBER_OF_ROUNDED_CHARACTERS_FINAL, RoundingMode.HALF_UP);
         LoanOfferDTO loanOfferDTO1 = new LoanOfferDTO(applicationId, loanApplicationRequestDTO.getAmount(), totalAmount,
                 loanApplicationRequestDTO.getTerm(), monthlyPayment, finalRate, true, false);
         offers.add(loanOfferDTO1);
@@ -64,12 +71,13 @@ public class ConveyorService {
         BigDecimal finalRate = BigDecimal.valueOf(rate).subtract(BigDecimal.valueOf(3));
         BigDecimal totalAmount = loanApplicationRequestDTO.getAmount().add(insurance);
         BigDecimal monthlyInterestRate = finalRate.divide(BigDecimal.valueOf(1200), NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
-        BigDecimal x = monthlyInterestRate.add(BigDecimal.valueOf(1))
+        BigDecimal exponentiation = monthlyInterestRate.add(BigDecimal.valueOf(1))
                 .pow(loanApplicationRequestDTO.getTerm());
-        BigDecimal y = BigDecimal.valueOf(1).divide(x, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
-        BigDecimal z = BigDecimal.valueOf(1).subtract(y);
-        BigDecimal monthlyPayment = monthlyInterestRate.divide(z, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP)
-                .multiply(totalAmount);
+        BigDecimal transformationInNegativeDegree = BigDecimal.valueOf(1).divide(exponentiation, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
+        BigDecimal denominatorCalculation = BigDecimal.valueOf(1).subtract(transformationInNegativeDegree);
+        BigDecimal monthlyPayment = monthlyInterestRate.divide(denominatorCalculation, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP)
+                .multiply(totalAmount)
+                .divide(BigDecimal.ONE, NUMBER_OF_ROUNDED_CHARACTERS_FINAL, RoundingMode.HALF_UP);
         LoanOfferDTO loanOfferDTO2 = new LoanOfferDTO(applicationId, loanApplicationRequestDTO.getAmount(), totalAmount,
                 loanApplicationRequestDTO.getTerm(), monthlyPayment, finalRate, true, true);
         offers.add(loanOfferDTO2);
@@ -79,12 +87,13 @@ public class ConveyorService {
     private void generateStandardLoanOfferDTO(LoanApplicationRequestDTO loanApplicationRequestDTO, List<LoanOfferDTO> offers) {
         BigDecimal monthlyInterestRate = BigDecimal.valueOf(rate)
                 .divide(BigDecimal.valueOf(1200), NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
-        BigDecimal x = monthlyInterestRate.add(BigDecimal.valueOf(1))
+        BigDecimal exponentiation = monthlyInterestRate.add(BigDecimal.valueOf(1))
                 .pow(loanApplicationRequestDTO.getTerm());
-        BigDecimal y = BigDecimal.valueOf(1).divide(x, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
-        BigDecimal z = BigDecimal.valueOf(1).subtract(y);
-        BigDecimal monthlyPayment = monthlyInterestRate.divide(z, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP)
-                .multiply(loanApplicationRequestDTO.getAmount());
+        BigDecimal transformationInNegativeDegree = BigDecimal.valueOf(1).divide(exponentiation, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
+        BigDecimal denominatorCalculation = BigDecimal.valueOf(1).subtract(transformationInNegativeDegree);
+        BigDecimal monthlyPayment = monthlyInterestRate.divide(denominatorCalculation, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP)
+                .multiply(loanApplicationRequestDTO.getAmount())
+                .divide(BigDecimal.ONE, NUMBER_OF_ROUNDED_CHARACTERS_FINAL, RoundingMode.HALF_UP);
         LoanOfferDTO loanOfferDTO3 = new LoanOfferDTO(applicationId, loanApplicationRequestDTO.getAmount(), loanApplicationRequestDTO.getAmount(),
                 loanApplicationRequestDTO.getTerm(), monthlyPayment, BigDecimal.valueOf(rate), false, false);
         offers.add(loanOfferDTO3);
@@ -94,12 +103,13 @@ public class ConveyorService {
     private void generateLoanOfferDTOForSalaryClient(LoanApplicationRequestDTO loanApplicationRequestDTO, List<LoanOfferDTO> offers) {
         BigDecimal finalRate = BigDecimal.valueOf(rate).subtract(BigDecimal.valueOf(1.5));
         BigDecimal monthlyInterestRate = finalRate.divide(BigDecimal.valueOf(1200), NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
-        BigDecimal x = monthlyInterestRate.add(BigDecimal.valueOf(1))
+        BigDecimal exponentiation = monthlyInterestRate.add(BigDecimal.valueOf(1))
                 .pow(loanApplicationRequestDTO.getTerm());
-        BigDecimal y = BigDecimal.valueOf(1).divide(x, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
-        BigDecimal z = BigDecimal.valueOf(1).subtract(y);
-        BigDecimal monthlyPayment = monthlyInterestRate.divide(z, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP)
-                .multiply(loanApplicationRequestDTO.getAmount());
+        BigDecimal transformationInNegativeDegree = BigDecimal.valueOf(1).divide(exponentiation, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP);
+        BigDecimal denominatorCalculation = BigDecimal.valueOf(1).subtract(transformationInNegativeDegree);
+        BigDecimal monthlyPayment = monthlyInterestRate.divide(denominatorCalculation, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.HALF_UP)
+                .multiply(loanApplicationRequestDTO.getAmount())
+                .divide(BigDecimal.ONE, NUMBER_OF_ROUNDED_CHARACTERS_FINAL, RoundingMode.HALF_UP);
         LoanOfferDTO loanOfferDTO4 = new LoanOfferDTO(applicationId, loanApplicationRequestDTO.getAmount(), loanApplicationRequestDTO.getAmount(),
                 loanApplicationRequestDTO.getTerm(), monthlyPayment, finalRate, false, true);
         offers.add(loanOfferDTO4);
@@ -113,7 +123,7 @@ public class ConveyorService {
 
         if (scoringDataDTO.getEmployment().getEmploymentStatus().equals(EmploymentStatus.UNEMPLOYED) ||
                 scoringDataDTO.getAmount().compareTo(scoringDataDTO.getEmployment().getSalary().multiply(BigDecimal.valueOf(20))) > 0 ||
-                ageClient > -20 || ageClient < -60 || scoringDataDTO.getEmployment().getWorkExperienceTotal() < 12 ||
+                ageClient > -MIN_AGE || ageClient < -MAX_AGE || scoringDataDTO.getEmployment().getWorkExperienceTotal() < 12 ||
                 scoringDataDTO.getEmployment().getWorkExperienceCurrent() < 3) {
             return null;
 
@@ -164,12 +174,12 @@ public class ConveyorService {
 
             switch (scoringDataDTO.getGender()) {
                 case MALE:
-                    if (ageClient > -55 && ageClient < -30) {
+                    if (ageClient > -MAX_AGE_FOR_MALE && ageClient < -MIN_AGE_FOR_MALE) {
                         finalRate -= 3;
                     }
                     break;
                 case FEMALE:
-                    if (ageClient > -60 && ageClient < -35) {
+                    if (ageClient > -MAX_AGE_FOR_FEMALE && ageClient < -MIN_AGE_FOR_FEMALE) {
                         finalRate -= 3;
                     }
                     break;
@@ -181,9 +191,9 @@ public class ConveyorService {
             BigDecimal psk;
             BigDecimal monthlyPayment;
             BigDecimal monthlyInterestRate;
-            BigDecimal x;
-            BigDecimal y;
-            BigDecimal z;
+            BigDecimal exponentiation;
+            BigDecimal transformationInNegativeDegree;
+            BigDecimal denominatorCalculation;
             BigDecimal remainingDebt;
             BigDecimal total;
             BigDecimal interests;
@@ -210,11 +220,11 @@ public class ConveyorService {
                     .divide(BigDecimal.ONE, NUMBER_OF_ROUNDED_CHARACTERS_FINAL, RoundingMode.HALF_UP);
             monthlyInterestRate = BigDecimal.valueOf(finalRate)
                     .divide(BigDecimal.valueOf(1200), NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.CEILING);
-            x = monthlyInterestRate.add(BigDecimal.valueOf(1))
+            exponentiation = monthlyInterestRate.add(BigDecimal.valueOf(1))
                     .pow(scoringDataDTO.getTerm());
-            y = BigDecimal.valueOf(1).divide(x, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.CEILING);
-            z = BigDecimal.valueOf(1).subtract(y);
-            monthlyPayment = monthlyInterestRate.divide(z, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.CEILING)
+            transformationInNegativeDegree = BigDecimal.valueOf(1).divide(exponentiation, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.CEILING);
+            denominatorCalculation = BigDecimal.valueOf(1).subtract(transformationInNegativeDegree);
+            monthlyPayment = monthlyInterestRate.divide(denominatorCalculation, NUMBER_OF_ROUNDED_CHARACTERS, RoundingMode.CEILING)
                     .multiply(total).divide(BigDecimal.ONE, NUMBER_OF_ROUNDED_CHARACTERS_FINAL, RoundingMode.HALF_UP);
             psk = total;
             remainingDebt = total;
